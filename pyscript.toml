@@ -1,0 +1,4 @@
+name = "903 pipeline test"
+packages = [
+    "sf-pipelines-test2"
+]

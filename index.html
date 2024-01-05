@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <!-- Recommended meta tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css" />
+    <!-- This script tag bootstraps PyScript -->
+    <script
+      type="module"
+      src="https://pyscript.net/releases/2023.11.2/core.js"
+    ></script>
+
+    <!-- for splashscreen -->
+    <style></style>
+    <script type="module">
+      const loading = document.getElementById("loading");
+      addEventListener("py:ready", () => loading.close());
+      loading.showModal();
+    </script>
+
+    <title id="header-title">903 pipeline test</title>
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  </head>
+
+  <body>
+    <header>
+      <h1>903 pipeline test</h1>
+      <p>
+        This is a very basic 903 pipeline test. It expects the user to upload a
+        set of files and assumes the LA Code for now (<code>CAM</code>).
+      </p>
+      <p>
+        It will then run the pipeline and download the result as a
+        <code>.zip</code> file.
+      </p>
+    </header>
+    <main>
+      <article>
+        <h2>1 - Upload your 903 files first:</h2>
+        <input
+          type="file"
+          id="files"
+          multiple
+          name="choose the files to upload"
+        />
+      </article>
+      <article>
+        <div id="pandas-dev-console">
+          <h2>2 - See the progress bellow</h2>
+          <script type="py" terminal></script>
+        </div>
+      </article>
+
+      <article>
+        <h2>
+          3 - Wait for a zip file to be downloaded, when the pipeline is done
+        </h2>
+        <p>
+          This zip file is everything that the pipeline spits out. It includes
+          all files, including some of the process files.
+        </p>
+        <p>
+          The cleaned files should be in the <code>export</code> directory. The
+          error summary is in
+          <code>session/{session_id}/error_summary.csv</code>.
+        </p>
+        <br />
+        <p>
+          If the zip file was not exported, something went wrong 😔. Ask
+          Francisco about it!
+        </p>
+      </article>
+
+      <article>
+        <h3>Notes</h3>
+        <p>More features can be added easily as well, such as:</p>
+        <ul>
+          <li>allowing the user to choose the LA</li>
+          <li>make this web page look nice</li>
+          <li>show more constructive feedback in this page</li>
+        </ul>
+
+        <p>For the pipeline to work in pyodide 2 changes were needed:</p>
+        <ul>
+          <li>
+            In the original pipeline, some of the process files are exported to
+            parquet. However, this requires pyarrow, which is
+            <a href="https://github.com/pyodide/pyodide/issues/2933"
+              >not yet supported in pyodide</a
+            >. So, in pyodide environment, I changed it to export everything to
+            csv.
+          </li>
+          <li>
+            <a href="https://pypi.org/project/pydantic-yaml/">pydantic yaml</a>
+            is not supported in pyodide as well. Howeer, this was a quick fix,
+            with just the PyYAML package.
+          </li>
+        </ul>
+      </article>
+    </main>
+    <dialog id="loading">
+      <h1>Loading...</h1>
+    </dialog>
+    <!-- export zip directory -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+    <script>
+      function exportZip(binaryContent) {
+        const zip = new JSZip();
+        zip.file("result.zip", binaryContent, { binary: true });
+        zip.generateAsync({ type: "blob" }).then(function (content) {
+          // Create a link and trigger the download
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(content);
+          a.download = "result.zip";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      }
+    </script>
+    <section class="pyscript">
+      <script type="py" src="./main.py" config="./pyscript.toml"></script>
+    </section>
+  </body>
+</html>
